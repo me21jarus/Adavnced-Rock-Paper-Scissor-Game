@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Rock Paper Scissors</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            animation: float 6s infinite ease-in-out;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-100px) rotate(180deg); }
+        }
+
+        .game-container {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            max-width: 1200px;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #fff;
+            font-size: 3.5rem;
+            text-align: center;
+            margin: 2rem 0;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { text-shadow: 0 0 20px rgba(255, 255, 255, 0.5); }
+            to { text-shadow: 0 0 30px rgba(255, 255, 255, 0.8), 0 0 40px rgba(255, 255, 255, 0.6); }
+        }
+
+        .score-board {
+            display: flex;
+            justify-content: center;
+            gap: 4rem;
+            margin: 2rem 0;
+        }
+
+        .score-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            min-width: 150px;
+        }
+
+        .score-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .score-label {
+            color: #fff;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .score-value {
+            color: #fff;
+            font-size: 3rem;
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        .choices-container {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin: 3rem 0;
+            flex-wrap: wrap;
+        }
+
+        .choice {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .choice:hover {
+            transform: scale(1.1) rotate(5deg);
+            box-shadow: 0 0 40px rgba(255, 255, 255, 0.6);
+        }
+
+        .choice:active {
+            transform: scale(0.95);
+        }
+
+        .choice::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.6s;
+        }
+
+        .choice:hover::before {
+            transform: translateX(100%);
+        }
+
+        .choice.rock {
+            background: linear-gradient(45deg, #8e44ad, #3498db);
+        }
+
+        .choice.paper {
+            background: linear-gradient(45deg, #2ecc71, #27ae60);
+        }
+
+        .choice.scissors {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+        }
+
+        .choice-icon {
+            font-size: 4rem;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .battle-arena {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 3rem;
+            margin: 3rem 0;
+            min-height: 200px;
+        }
+
+        .battle-choice {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 3rem;
+            color: #fff;
+            opacity: 0;
+            transform: scale(0);
+            transition: all 0.5s ease;
+        }
+
+        .battle-choice.show {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .vs {
+            font-size: 2rem;
+            color: #fff;
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        .message-container {
+            text-align: center;
+            margin: 2rem 0;
+        }
+
+        .message {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 1.5rem 3rem;
+            color: #fff;
+            font-size: 1.5rem;
+            font-weight: bold;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+
+        .message.win {
+            background: linear-gradient(45deg, #2ecc71, #27ae60);
+            animation: pulse 0.5s ease-in-out;
+        }
+
+        .message.lose {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            animation: shake 0.5s ease-in-out;
+        }
+
+        .message.draw {
+            background: linear-gradient(45deg, #f39c12, #e67e22);
+            animation: bounce 0.5s ease-in-out;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .reset-button {
+            background: linear-gradient(45deg, #9b59b6, #8e44ad);
+            color: #fff;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 2rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .reset-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .reset-button:active {
+            transform: translateY(0);
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 1rem;
+            text-align: center;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            min-width: 120px;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        .stat-label {
+            color: #fff;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .choices-container {
+                gap: 1rem;
+            }
+            
+            .choice {
+                width: 120px;
+                height: 120px;
+            }
+            
+            .choice-icon {
+                font-size: 2.5rem;
+            }
+            
+            .score-board {
+                gap: 2rem;
+            }
+            
+            .battle-arena {
+                gap: 1rem;
+            }
+            
+            .battle-choice {
+                width: 100px;
+                height: 100px;
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="particles"></div>
+    
+    <div class="game-container">
+        <h1>🎮 Rock Paper Scissors 🎮</h1>
+        
+        <div class="score-board">
+            <div class="score-card">
+                <div class="score-label">Player</div>
+                <div class="score-value" id="player-score">0</div>
+            </div>
+            <div class="score-card">
+                <div class="score-label">Computer</div>
+                <div class="score-value" id="computer-score">0</div>
+            </div>
+        </div>
+        
+        <div class="choices-container">
+            <div class="choice rock" data-choice="rock">
+                <div class="choice-icon">🪨</div>
+            </div>
+            <div class="choice paper" data-choice="paper">
+                <div class="choice-icon">📄</div>
+            </div>
+            <div class="choice scissors" data-choice="scissors">
+                <div class="choice-icon">✂️</div>
+            </div>
+        </div>
+        
+        <div class="battle-arena">
+            <div class="battle-choice" id="player-choice"></div>
+            <div class="vs">VS</div>
+            <div class="battle-choice" id="computer-choice"></div>
+        </div>
+        
+        <div class="message-container">
+            <div class="message" id="game-message">Choose your weapon!</div>
+        </div>
+        
+        <div class="game-stats">
+            <div class="stat-card">
+                <div class="stat-value" id="games-played">0</div>
+                <div class="stat-label">Games Played</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="win-rate">0%</div>
+                <div class="stat-label">Win Rate</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="current-streak">0</div>
+                <div class="stat-label">Current Streak</div>
+            </div>
+        </div>
+        
+        <button class="reset-button" id="reset-game">🔄 Reset Game</button>
+    </div>
+
+    <script>
+        class RockPaperScissors {
+            constructor() {
+                this.playerScore = 0;
+                this.computerScore = 0;
+                this.gamesPlayed = 0;
+                this.currentStreak = 0;
+                this.lastResult = null;
+                
+                this.choices = ['rock', 'paper', 'scissors'];
+                this.icons = {
+                    rock: '🪨',
+                    paper: '📄',
+                    scissors: '✂️'
+                };
+                
+                this.init();
+                this.createParticles();
+            }
+            
+            init() {
+                const choiceElements = document.querySelectorAll('.choice');
+                choiceElements.forEach(choice => {
+                    choice.addEventListener('click', () => {
+                        const playerChoice = choice.dataset.choice;
+                        this.playGame(playerChoice);
+                    });
+                });
+                
+                document.getElementById('reset-game').addEventListener('click', () => {
+                    this.resetGame();
+                });
+            }
+            
+            createParticles() {
+                const particlesContainer = document.querySelector('.particles');
+                for (let i = 0; i < 20; i++) {
+                    const particle = document.createElement('div');
+                    particle.classList.add('particle');
+                    particle.style.left = Math.random() * 100 + '%';
+                    particle.style.animationDelay = Math.random() * 6 + 's';
+                    particle.style.animationDuration = (Math.random() * 3 + 3) + 's';
+                    particlesContainer.appendChild(particle);
+                }
+            }
+            
+            playGame(playerChoice) {
+                const computerChoice = this.getComputerChoice();
+                const result = this.determineWinner(playerChoice, computerChoice);
+                
+                this.showBattleAnimation(playerChoice, computerChoice);
+                
+                setTimeout(() => {
+                    this.updateScore(result);
+                    this.displayResult(result, playerChoice, computerChoice);
+                    this.updateStats();
+                }, 1000);
+            }
+            
+            getComputerChoice() {
+                return this.choices[Math.floor(Math.random() * this.choices.length)];
+            }
+            
+            determineWinner(playerChoice, computerChoice) {
+                if (playerChoice === computerChoice) return 'draw';
+                
+                const winConditions = {
+                    rock: 'scissors',
+                    paper: 'rock',
+                    scissors: 'paper'
+                };
+                
+                return winConditions[playerChoice] === computerChoice ? 'win' : 'lose';
+            }
+            
+            showBattleAnimation(playerChoice, computerChoice) {
+                const playerBattle = document.getElementById('player-choice');
+                const computerBattle = document.getElementById('computer-choice');
+                
+                playerBattle.textContent = this.icons[playerChoice];
+                computerBattle.textContent = this.icons[computerChoice];
+                
+                playerBattle.classList.add('show');
+                computerBattle.classList.add('show');
+                
+                // Add battle animation
+                setTimeout(() => {
+                    playerBattle.style.animation = 'shake 0.5s ease-in-out';
+                    computerBattle.style.animation = 'shake 0.5s ease-in-out';
+                }, 500);
+            }
+            
+            updateScore(result) {
+                if (result === 'win') {
+                    this.playerScore++;
+                    this.currentStreak = this.lastResult === 'win' ? this.currentStreak + 1 : 1;
+                } else if (result === 'lose') {
+                    this.computerScore++;
+                    this.currentStreak = this.lastResult === 'lose' ? this.currentStreak + 1 : 1;
+                } else {
+                    this.currentStreak = 0;
+                }
+                
+                this.lastResult = result;
+                this.gamesPlayed++;
+                
+                document.getElementById('player-score').textContent = this.playerScore;
+                document.getElementById('computer-score').textContent = this.computerScore;
+            }
+            
+            displayResult(result, playerChoice, computerChoice) {
+                const messageElement = document.getElementById('game-message');
+                let message = '';
+                
+                messageElement.className = 'message';
+                
+                if (result === 'win') {
+                    message = `🎉 You Win! ${this.icons[playerChoice]} beats ${this.icons[computerChoice]}`;
+                    messageElement.classList.add('win');
+                } else if (result === 'lose') {
+                    message = `😢 You Lose! ${this.icons[computerChoice]} beats ${this.icons[playerChoice]}`;
+                    messageElement.classList.add('lose');
+                } else {
+                    message = `🤝 It's a Draw! Both chose ${this.icons[playerChoice]}`;
+                    messageElement.classList.add('draw');
+                }
+                
+                messageElement.textContent = message;
+            }
+            
+            updateStats() {
+                const winRate = this.gamesPlayed > 0 ? Math.round((this.playerScore / this.gamesPlayed) * 100) : 0;
+                
+                document.getElementById('games-played').textContent = this.gamesPlayed;
+                document.getElementById('win-rate').textContent = winRate + '%';
+                document.getElementById('current-streak').textContent = this.currentStreak;
+            }
+            
+            resetGame() {
+                this.playerScore = 0;
+                this.computerScore = 0;
+                this.gamesPlayed = 0;
+                this.currentStreak = 0;
+                this.lastResult = null;
+                
+                document.getElementById('player-score').textContent = '0';
+                document.getElementById('computer-score').textContent = '0';
+                document.getElementById('game-message').textContent = 'Choose your weapon!';
+                document.getElementById('game-message').className = 'message';
+                
+                const battleChoices = document.querySelectorAll('.battle-choice');
+                battleChoices.forEach(choice => {
+                    choice.classList.remove('show');
+                    choice.textContent = '';
+                    choice.style.animation = '';
+                });
+                
+                this.updateStats();
+            }
+        }
+        
+        // Initialize the game
+        const game = new RockPaperScissors();
+    </script>
+</body>
+</html>
